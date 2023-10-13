@@ -3,7 +3,7 @@ import os
 from fastapi.responses import JSONResponse
 
 
-from fastapi import FastAPI, Request
+from fastapi import APIRouter, Request
 from fastapi_sso.sso.google import GoogleSSO
 
 from utils.getConfig import get_config
@@ -13,7 +13,7 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 CLIENT_ID = get_config().get("Google Client Token", "CLIENT_ID")
 CLIENT_SECRET = get_config().get("Google Client Token", "CLIENT_SECRET")
 
-app = FastAPI()
+router = APIRouter()
 
 sso = GoogleSSO(
     client_id=CLIENT_ID,
@@ -23,13 +23,13 @@ sso = GoogleSSO(
 )
 
 
-@app.get("/auth/login")
+@router.get("/auth/login")
 async def auth_init():
     with sso:
         return await sso.get_login_redirect(params={"prompt": "consent", "access_type": "offline"})
 
 
-@app.get("/auth/callback")
+@router.get("/auth/callback")
 async def auth_callback(request: Request):
     with sso:
         user = await sso.verify_and_process(request)
